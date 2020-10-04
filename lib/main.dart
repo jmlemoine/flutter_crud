@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_crud/database.dart';
 
 void main() {
   runApp(MyApp());
@@ -50,7 +51,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> _tasks = [];
+  TaskDatabase db = TaskDatabase();
+  //List<String> _tasks = [];
 
   //int _counter = 0;
 
@@ -79,10 +81,19 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: ListView(
-        children: <Widget>[
-          for (String task in _tasks) ListTile(title: Text(task))
-        ],
+      body: FutureBuilder(
+        future: db.initDB(),
+        builder: (BuildContext context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return _showList(context);
+          }
+          else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+        //child: ,
       ),/*Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
@@ -121,6 +132,27 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _showList(BuildContext context) {
+    return FutureBuilder(
+      future: db.getAllTasks(),
+      builder: (BuildContext context, AsyncSnapshot<List<Task>> snapshot) {
+        if (snapshot.hasData) {
+          return ListView(
+            children: <Widget>[
+              for (Task task in snapshot.data) ListTile(title: Text(task.name))
+            ],
+          );
+        }
+        else {
+          return Center(
+            child: Text("Add tasks!"),
+          );
+        }
+      }
+    );
+  }
+
+
   _addTask() {
     showDialog(
       context: context,
@@ -131,7 +163,8 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: InputDecoration(icon: Icon(Icons.add_circle_outline)),
               onSubmitted: (text) {
                 setState(() {
-                  _tasks.add(text);
+                  var task = Task(text);
+                  db.insert(task);
                   Navigator.pop(context);
                 });
               },

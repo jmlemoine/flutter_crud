@@ -139,7 +139,16 @@ class _MyHomePageState extends State<MyHomePage> {
         if (snapshot.hasData) {
           return ListView(
             children: <Widget>[
-              for (Task task in snapshot.data) ListTile(title: Text(task.name))
+              for (Task task in snapshot.data)
+                ListTile(
+                  onTap: () { _toogleTask(task); },
+                  title: Text(task.name),
+                  leading: Icon(
+                    task.completed
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                  ),
+                )
             ],
           );
         }
@@ -152,6 +161,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _toogleTask(Task task) async {
+    task.completed = !task.completed;
+    await db.updateTask(task);
+    setState(() {
+
+    });
+  }
+
+
 
   _addTask() {
     showDialog(
@@ -163,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: InputDecoration(icon: Icon(Icons.add_circle_outline)),
               onSubmitted: (text) {
                 setState(() {
-                  var task = Task(text);
+                  var task = Task(-1, text, false);
                   db.insert(task);
                   Navigator.pop(context);
                 });
